@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Anak: Ayo ke Masjid!</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
+            text-align: center;
+            background-color: #e0f7fa;
+            margin: 0;
+            padding: 10px;
+        }
+
+        h1 {
+            color: #1b5e20;
+            margin-bottom: 5px;
+            font-size: 24px;
+            text-shadow: 1px 1px 2px white;
+        }
+
+        p {
+            color: #004d40;
+            font-size: 16px;
+            margin-top: 0;
+            font-weight: bold;
+        }
+
+        /* Form Input Nama */
+        #name-screen {
+            background-color: #ffffff;
+            max-width: 350px;
+            margin: 40px auto;
+            padding: 25px;
+            border: 4px solid #4caf50;
+            border-radius: 20px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+
+        #name-screen input {
+            font-family: inherit;
+            font-size: 18px;
+            padding: 10px;
+            width: 80%;
+            border: 2px solid #81c784;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 15px;
+            outline: none;
+        }
+
+        .btn-start {
+            background-color: #ff9800;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px #f57f17;
+            cursor: pointer;
+        }
+
+        .btn-start:active {
+            box-shadow: 0 2px #f57f17;
+            transform: translateY(2px);
+        }
+
+        /* Area Game dengan Background Masjid */
+        #game-screen {
+            display: none;
+            background-image: linear-gradient(rgba(255,255,255,0.4), rgba(255,255,255,0.4)), 
+                              url('https://images.unsplash.com/photo-1542662565-7e4b66bae529?q=80&w=800&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            padding: 15px;
+            border-radius: 20px;
+            max-width: 400px;
+            margin: 0 auto;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+
+        #game-container {
+            display: inline-block;
+            position: relative;
+            border: 4px solid #2e7d32;
+            border-radius: 12px;
+            background-color: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        /* Tombol Navigasi */
+        .controls {
+            margin-top: 15px;
+            display: grid;
+            grid-template-columns: repeat(3, 60px);
+            grid-template-rows: repeat(2, 60px);
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .btn {
+            background-color: #4caf50;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px #2e7d32;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .btn:active {
+            box-shadow: 0 2px #2e7d32;
+            transform: translateY(2px);
+        }
+
+        #btn-up { grid-column: 2; grid-row: 1; }
+        #btn-left { grid-column: 1; grid-row: 2; }
+        #btn-down { grid-column: 2; grid-row: 2; }
+        #btn-right { grid-column: 3; grid-row: 2; }
+
+        /* Modal Kemenangan */
+        #win-message {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fff9c4;
+            border: 4px solid #fbc02d;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            width: 80%;
+        }
+
+        #win-message h2 {
+            color: #f57f17;
+            margin: 0 0 10px 0;
+        }
+
+        #win-message button {
+            background-color: #ff9800;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- TAMPILAN 1: MASUKKAN NAMA -->
+    <div id="name-screen">
+        <h1>🕌 AYO KE MASJID 🕌</h1>
+        <p>Siapa nama kamu?</p>
+        <input type="text" id="player-name-input" placeholder="Tulis namamu..." maxlength="12">
+        <br>
+        <button class="btn-start" onclick="startGame()">Mulai Main</button>
+    </div>
+
+    <!-- TAMPILAN 2: AREA GAME -->
+    <div id="game-screen">
+        <h1 id="game-title">🕌 AYO KE MASJID 🕌</h1>
+        <p id="game-instruction">Arahkan karakter menuju masjid!</p>
+
+        <div id="game-container">
+            <canvas id="mazeCanvas" width="350" height="350"></canvas>
+            
+            <div id="win-message">
+                <h2>🎉 HEBAT! 🎉</h2>
+                <p id="win-text">Alhamdulillah!</p>
+                <button onclick="resetGame()">Main Lagi</button>
+            </div>
+        </div>
+
+        <!-- Tombol Navigasi HP/Tablet -->
+        <div class="controls">
+            <button class="btn" id="btn-up" onclick="move('up')">▲</button>
+            <button class="btn" id="btn-left" onclick="move('left')">◀</button>
+            <button class="btn" id="btn-down" onclick="move('down')">▼</button>
+            <button class="btn" id="btn-right" onclick="move('right')">▶</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("mazeCanvas");
+        const ctx = canvas.getContext("2d");
+
+        const rows = 7;
+        const cols = 7;
+        const tileSize = canvas.width / cols;
+
+        let playerName = "Teman";
+
+        // Peta Labirin: 1 = Semak/Tembok, 0 = Jalan, 2 = Masjid (Finish)
+        const maze = [
+            [0, 1, 0, 0, 0, 1, 0],
+            [0, 1, 0, 1, 0, 1, 0],
+            [0, 0, 0, 1, 0, 0, 0],
+            [1, 1, 0, 1, 1, 1, 0],
+            [0, 0, 0, 0, 0, 1, 0],
+            [0, 1, 1, 1, 0, 1, 0],
+            [0, 0, 0, 1, 0, 0, 2]
+        ];
+
+        let player = { x: 0, y: 0 };
+
+        function startGame() {
+            const inputVal = document.getElementById("player-name-input").value.trim();
+            if (inputVal !== "") {
+                playerName = inputVal;
+            }
+
+            document.getElementById("name-screen").style.display = "none";
+            document.getElementById("game-screen").style.display = "block";
+            document.getElementById("game-instruction").innerHTML = `Bantu <b>${playerName}</b> (👦) menuju masjid (🕌)!`;
+
+            drawMaze();
+        }
+
+        function drawMaze() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    if (maze[r][c] === 1) {
+                        // Semak Hijau
+                        ctx.fillStyle = "#81c784";
+                        ctx.fillRect(c * tileSize, r * tileSize, tileSize, tileSize);
+                        ctx.strokeStyle = "#2e7d32";
+                        ctx.strokeRect(c * tileSize, r * tileSize, tileSize, tileSize);
+                    } else if (maze[r][c] === 2) {
+                        // Masjid (Goal)
+                        ctx.fillStyle = "#fff59d";
+                        ctx.fillRect(c * tileSize, r * tileSize, tileSize, tileSize);
+                        ctx.font = `${tileSize * 0.7}px Arial`;
+                        ctx.textAlign = "center";
+                        ctx.textBaseline = "middle";
+                        ctx.fillText("🕌", c * tileSize + tileSize / 2, r * tileSize + tileSize / 2);
+                    } else {
+                        // Jalanan Transparan Halus
+                        ctx.fillStyle = "rgba(255, 248, 225, 0.85)";
+                        ctx.fillRect(c * tileSize, r * tileSize, tileSize, tileSize);
+                    }
+                }
+            }
+
+            // Gambar Karakter Anak
+            ctx.font = `${tileSize * 0.7}px Arial`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("👦", player.x * tileSize + tileSize / 2, player.y * tileSize + tileSize / 2);
+        }
+
+        function move(direction) {
+            let newX = player.x;
+            let newY = player.y;
+
+            if (direction === 'up') newY--;
+            if (direction === 'down') newY++;
+            if (direction === 'left') newX--;
+            if (direction === 'right') newX++;
+
+            if (newX >= 0 && newX < cols && newY >= 0 && newY < rows) {
+                if (maze[newY][newX] !== 1) {
+                    player.x = newX;
+                    player.y = newY;
+                    drawMaze();
+                    checkWin();
+                }
+            }
+        }
+
+        function checkWin() {
+            if (maze[player.y][player.x] === 2) {
+                document.getElementById("win-text").innerHTML = `<b>Alhamdulillah!</b><br>${playerName} berhasil sampai di masjid! 🎉`;
+                document.getElementById("win-message").style.display = "block";
+            }
+        }
+
+        function resetGame() {
+            player = { x: 0, y: 0 };
+            document.getElementById("win-message").style.display = "none";
+            drawMaze();
+        }
+
+        window.addEventListener("keydown", function(e) {
+            if (document.getElementById("game-screen").style.display === "block") {
+                if (e.key === "ArrowUp") move("up");
+                if (e.key === "ArrowDown") move("down");
+                if (e.key === "ArrowLeft") move("left");
+                if (e.key === "ArrowRight") move("right");
+            }
+        });
+    </script>
+
+</body>
+</html>
